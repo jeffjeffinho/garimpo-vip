@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+  <title>Garimpo.vip | Promoções & Cupons</title>
+  <meta name="description" content="Curadoria de promoções e cupons, sem spam.">
+  <meta name="theme-color" content="#1e40af">
+
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/3081/3081559.png">
+  <link rel="manifest" id="manifest-placeholder">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['"Plus Jakarta Sans"', 'sans-serif'] },
+          colors: { brand: { 600:'#1d4ed8', 700:'#1e40af' } },
+          boxShadow: {
+            soft: '0 10px 25px rgba(0,0,0,0.06)',
+            card: '0 12px 30px rgba(0,0,0,0.07)'
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body { background:#eef1f5; -webkit-tap-highlight-color: transparent; }
+    .no-scrollbar::-webkit-scrollbar{ display:none; }
+    .no-scrollbar{ -ms-overflow-style:none; scrollbar-width:none; }
+    .clamp-2{
+      display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
+      overflow:hidden;
+    }
+    .toast{
+      position:fixed; top:-120px; left:50%; transform:translateX(-50%);
+      background:rgba(15,23,42,.95); color:#fff;
+      padding:10px 14px; border-radius:999px;
+      z-index:9999; backdrop-filter:blur(10px);
+      box-shadow:0 20px 40px rgba(0,0,0,.2);
+      transition: top .4s cubic-bezier(.19,1,.22,1);
+      display:flex; align-items:center; gap:10px;
+      font-size:13px; font-weight:800;
+    }
+    .toast.show{ top:18px; }
+
+    .badge-off{
+      position:absolute; top:10px; right:10px;
+      background:#1d4ed8; color:#fff;
+      font-weight:900; font-size:12px;
+      padding:6px 10px; border-radius:10px;
+      box-shadow:0 10px 18px rgba(29,78,216,.25);
+      letter-spacing:-.01em;
+    }
+    .store-bubble{
+      position:absolute; right:10px; bottom:10px;
+      width:42px; height:42px;
+      border-radius:999px; background:#fff;
+      display:flex; align-items:center; justify-content:center;
+      box-shadow:0 10px 20px rgba(0,0,0,.12);
+      border:1px solid rgba(226,232,240,.9);
+      overflow:hidden;
+    }
+    .deal-card{ transition: transform .18s ease, box-shadow .18s ease; }
+    .deal-card:hover{ transform: translateY(-2px); box-shadow: var(--tw-shadow-card); }
+    .deal-card:active{ transform: scale(.99); }
+
+    .tab-active{
+      color:white !important;
+      background:rgba(255,255,255,.14) !important;
+      border-color:rgba(255,255,255,.18) !important;
+    }
+  </style>
+</head>
+
+<body class="text-slate-800 antialiased">
+
+  <!-- TOAST -->
+  <div id="toast" class="toast">
+    <div class="bg-white/15 p-1.5 rounded-full">
+      <i data-lucide="check" class="w-3.5 h-3.5"></i>
+    </div>
+    <span id="toast-msg">Ok</span>
+  </div>
+
+  <!-- HEADER -->
+  <header class="sticky top-0 z-50 bg-brand-700">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center gap-4">
+      <!-- Logo -->
+      <div class="flex items-center gap-3 cursor-pointer select-none" onclick="window.scrollTo({top:0, behavior:'smooth'})">
+        <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center border border-white/15">
+          <i data-lucide="badge-percent" class="w-5 h-5 text-white"></i>
+        </div>
+        <div class="leading-tight">
+          <div class="text-white font-extrabold tracking-tight text-sm sm:text-base">GARIMPO</div>
+          <div class="text-white/70 font-bold tracking-widest text-[10px] -mt-0.5">.VIP</div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="ml-2 flex items-center gap-2">
+        <button id="tab-deals"
+          onclick="app.setTab('deals')"
+          class="px-3 sm:px-4 h-10 rounded-xl border border-white/15 bg-white/10 text-white font-extrabold text-xs uppercase tracking-wider tab-active">
+          Promoções
+        </button>
+        <button id="tab-coupons"
+          onclick="app.setTab('coupons')"
+          class="px-3 sm:px-4 h-10 rounded-xl border border-white/15 bg-transparent text-white/85 hover:text-white font-extrabold text-xs uppercase tracking-wider">
+          Cupons
+        </button>
+      </div>
+
+      <div class="ml-auto flex items-center gap-2">
+        <button onclick="shareLink()" class="w-10 h-10 rounded-full hover:bg-white/10 active:scale-95 flex items-center justify-center" aria-label="Compartilhar">
+          <i data-lucide="share-2" class="w-5 h-5 text-white"></i>
+        </button>
+        <button onclick="app.focusSearch()" class="w-10 h-10 rounded-full hover:bg-white/10 active:scale-95 flex items-center justify-center" aria-label="Buscar">
+          <i data-lucide="search" class="w-5 h-5 text-white"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6">
+
+    <!-- Busca + filtros -->
+    <section class="bg-white rounded-2xl shadow-soft border border-slate-200/70 p-4">
+      <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+        <div class="flex items-center gap-3 flex-1">
+          <div class="w-11 h-11 rounded-xl bg-slate-100 flex items-center justify-center">
+            <i data-lucide="search" class="w-5 h-5 text-slate-500"></i>
+          </div>
+          <input
+            id="searchInput"
+            type="text"
+            onkeyup="app.updateSearch(this.value)"
+            class="w-full bg-transparent outline-none text-base font-semibold placeholder:text-slate-400"
+            placeholder="Buscar ofertas, cupons, lojas..."
+          />
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button onclick="app.toggleFavoritesMode()" id="btn-fav-filter"
+            class="shrink-0 px-4 h-11 rounded-xl bg-slate-100 hover:bg-slate-200 active:scale-95 font-extrabold text-xs uppercase tracking-wider text-slate-700 flex items-center gap-2">
+            <i data-lucide="heart" class="w-4 h-4"></i>
+            Salvos
+          </button>
+
+          <button id="installAppBtn" style="display:none"
+            class="shrink-0 px-4 h-11 rounded-xl bg-brand-700 hover:bg-brand-600 text-white active:scale-95 font-extrabold text-xs uppercase tracking-wider flex items-center gap-2">
+            <i data-lucide="download" class="w-4 h-4"></i>
+            App
+          </button>
+        </div>
+      </div>
+
+      <div class="mt-4">
+        <div class="flex items-center justify-between">
+          <h2 class="text-base sm:text-lg font-extrabold text-slate-800">Lojas / Categorias</h2>
+          <button class="text-sm font-extrabold text-slate-600 hover:underline" onclick="app.resetFilters()">Limpar</button>
+        </div>
+        <div id="categories-container" class="mt-3 flex gap-3 overflow-x-auto no-scrollbar pb-2"></div>
+      </div>
+    </section>
+
+    <!-- ABA 1: PROMOÇÕES -->
+    <section id="view-deals" class="space-y-3">
+      <h2 class="text-xl sm:text-2xl font-extrabold text-slate-800">Promoções do dia</h2>
+
+      <div id="loading-skeleton" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5"></div>
+      <div id="products-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 hidden"></div>
+    </section>
+
+    <!-- ABA 2: CUPONS -->
+    <section id="view-coupons" class="space-y-3 hidden">
+      <h2 class="text-xl sm:text-2xl font-extrabold text-slate-800">Cupons</h2>
+
+      <div id="coupons-container" class="grid grid-cols-1 lg:grid-cols-2 gap-4 hidden"></div>
+
+      <div id="coupons-skeleton" class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <!-- skeleton via JS -->
+      </div>
+    </section>
+
+    <!-- Empty -->
+    <div id="empty-state" class="hidden bg-white rounded-2xl border border-slate-200/70 shadow-soft p-10 text-center">
+      <div class="mx-auto w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center mb-4">
+        <i data-lucide="search-x" class="w-6 h-6 text-slate-400"></i>
+      </div>
+      <h3 class="font-extrabold text-lg text-slate-800">Nada por aqui</h3>
+      <p class="text-sm text-slate-500 mt-1 mb-6">Tente outro termo ou limpe os filtros.</p>
+      <button onclick="app.resetFilters()" class="px-6 h-11 rounded-xl bg-brand-700 hover:bg-brand-600 text-white font-extrabold text-sm active:scale-95">
+        Limpar filtros
+      </button>
+    </div>
+  </main>
+
+  <footer class="py-10 text-center text-slate-500 text-xs">
+    © 2026 — Garimpo.vip
+  </footer>
+
+  <script>
+    // =======================
+    // CONFIG (Feed via Netlify Function /api/feed)
+    // =======================
+    const FEED_API_URL = "/api/feed";
+
+    // Logos padrão (opcional)
+    const STORE_LOGOS = {
+      "MercadoLivre": "https://logodownload.org/wp-content/uploads/2018/10/mercado-livre-logo.png",
+      "mercadolivre": "https://logodownload.org/wp-content/uploads/2018/10/mercado-livre-logo.png",
+      "Shopee": "https://seeklogo.com/images/S/shopee-logo-28A23F0D0B-seeklogo.com.png",
+      "shopee": "https://seeklogo.com/images/S/shopee-logo-28A23F0D0B-seeklogo.com.png",
+      "Magalu": "https://logodownload.org/wp-content/uploads/2019/10/magalu-logo-1.png",
+      "magalu": "https://logodownload.org/wp-content/uploads/2019/10/magalu-logo-1.png",
+      "Netshoes": "https://seeklogo.com/images/N/netshoes-logo-9FA8EF5B5E-seeklogo.com.png",
+      "netshoes": "https://seeklogo.com/images/N/netshoes-logo-9FA8EF5B5E-seeklogo.com.png",
+      "Centauro": "https://seeklogo.com/images/C/centauro-logo-1B8E5E7A8E-seeklogo.com.png",
+      "centauro": "https://seeklogo.com/images/C/centauro-logo-1B8E5E7A8E-seeklogo.com.png",
+      "Shein": "https://seeklogo.com/images/S/shein-logo-9A9C2F3A60-seeklogo.com.png",
+      "shein": "https://seeklogo.com/images/S/shein-logo-9A9C2F3A60-seeklogo.com.png",
+    };
+
+    // Fallback local (caso o feed esteja fora)
+    const BACKUP_PRODUCTS = [];
+
+    const app = {
+      data: [],
+      favorites: [],
+      tab: 'deals',
+      filter: { category: 'Todos', search: '', showOnlyFavorites: false },
+      deferredPrompt: null,
+
+      async init(){
+        this.setupPWA();
+        this.renderSkeleton();
+        this.renderCouponsSkeleton();
+        this.loadFavorites();
+        await this.fetchData();
+        this.renderCategories();
+        this.applyFilters();
+        this.checkInstallable();
+        lucide.createIcons();
+      },
+
+      setTab(tab){
+        this.tab = tab;
+
+        document.getElementById('view-deals').classList.toggle('hidden', tab !== 'deals');
+        document.getElementById('view-coupons').classList.toggle('hidden', tab !== 'coupons');
+
+        const btnDeals = document.getElementById('tab-deals');
+        const btnCoupons = document.getElementById('tab-coupons');
+
+        if(tab === 'deals'){
+          btnDeals.classList.add('tab-active','bg-white/10'); btnDeals.classList.remove('bg-transparent','text-white/85');
+          btnCoupons.classList.remove('tab-active','bg-white/10'); btnCoupons.classList.add('bg-transparent','text-white/85');
+        } else {
+          btnCoupons.classList.add('tab-active','bg-white/10'); btnCoupons.classList.remove('bg-transparent','text-white/85');
+          btnDeals.classList.remove('tab-active','bg-white/10'); btnDeals.classList.add('bg-transparent','text-white/85');
+        }
+
+        this.applyFilters();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      },
+
+      focusSearch(){
+        const input = document.getElementById('searchInput');
+        const y = input.getBoundingClientRect().top + window.scrollY - 90;
+        window.scrollTo({ top:y, behavior:'smooth' });
+        setTimeout(()=>input.focus(), 220);
+      },
+
+      // ======= AQUI: FEED NOVO (já vem pronto do GAS)
+      async fetchData(){
+        try{
+          const res = await fetch(FEED_API_URL, { cache:"no-store" });
+          if(!res.ok) throw new Error("Erro ao carregar feed");
+          const payload = await res.json();
+
+          const items = Array.isArray(payload.items) ? payload.items : [];
+
+          this.data = items.map((o, idx) => {
+            const category = String(o.category || "Geral");
+
+            const dt = o.datahora ? new Date(o.datahora) : null;
+            const timeAgo = dt && !isNaN(dt.getTime()) ? timeAgoFrom_(dt) : "";
+
+            const typeRaw = String(o.type || "deal").toLowerCase();
+            const type = (typeRaw === "coupon" || typeRaw === "cupom") ? "coupon" : "deal";
+
+            const price = Number(o.price ?? 0) || 0;
+            const oldPrice = Number(o.oldPrice ?? 0) || 0;
+
+            // percentOff deve ser negativo quando tiver desconto (pra badge aparecer)
+            let percentOff = Number(o.percentOff ?? 0) || 0;
+            if(oldPrice > 0 && price > 0){
+              percentOff = Math.round(((price - oldPrice) / oldPrice) * 100);
+            }
+
+            return {
+              id: String(o.id || `item-${idx}`),
+              type,
+              title: String(o.title || "Produto"),
+              price,
+              oldPrice,
+              category,
+              image: String(o.image || ""),
+              link: String(o.link || "#"),
+              coupon: String(o.coupon || ""),
+              storeLogo: STORE_LOGOS[category] || STORE_LOGOS[category.toLowerCase()] || "",
+              timeAgo,
+              installment: String(o.installment || ""),
+              percentOff,
+              description: String(o.description || ""),
+              expires: String(o.expires || "")
+            };
+          });
+
+          if(!this.data.length && BACKUP_PRODUCTS.length){
+            this.data = BACKUP_PRODUCTS;
+          }
+        }catch(e){
+          this.showToast("Modo Offline Ativado");
+          this.data = BACKUP_PRODUCTS;
+        }
+      },
+
+      loadFavorites(){
+        try{ this.favorites = JSON.parse(localStorage.getItem('garimpo_favs')) || []; }
+        catch{ this.favorites = []; }
+      },
+
+      toggleFavorite(id){
+        const strId = String(id);
+        if(this.favorites.includes(strId)){
+          this.favorites = this.favorites.filter(x => x !== strId);
+          this.showToast("Removido dos salvos");
+        } else {
+          this.favorites.push(strId);
+          this.showToast("Salvo");
+        }
+        localStorage.setItem('garimpo_favs', JSON.stringify(this.favorites));
+        this.applyFilters();
+      },
+
+      toggleFavoritesMode(){
+        this.filter.showOnlyFavorites = !this.filter.showOnlyFavorites;
+        const btn = document.getElementById('btn-fav-filter');
+        if(this.filter.showOnlyFavorites){
+          btn.classList.remove('bg-slate-100','text-slate-700');
+          btn.classList.add('bg-rose-600','text-white');
+          this.showToast("Filtrando salvos");
+        } else {
+          btn.classList.remove('bg-rose-600','text-white');
+          btn.classList.add('bg-slate-100','text-slate-700');
+        }
+        this.applyFilters();
+      },
+
+      setCategory(cat){
+        this.filter.category = cat;
+        this.renderCategories();
+        this.applyFilters();
+      },
+
+      updateSearch(val){
+        this.filter.search = String(val || '').toLowerCase();
+        this.applyFilters();
+      },
+
+      resetFilters(){
+        this.filter = { category:'Todos', search:'', showOnlyFavorites:false };
+        document.getElementById('searchInput').value = '';
+        const btn = document.getElementById('btn-fav-filter');
+        btn.classList.remove('bg-rose-600','text-white');
+        btn.classList.add('bg-slate-100','text-slate-700');
+        this.renderCategories();
+        this.applyFilters();
+      },
+
+      formatCurrency(val){
+        return new Intl.NumberFormat('pt-BR', { style:'currency', currency:'BRL' }).format(val);
+      },
+
+      renderCategories(){
+        const container = document.getElementById('categories-container');
+        const allCats = [...new Set(this.data.map(p => p.category))].filter(Boolean).sort();
+        const cats = ['Todos', ...allCats];
+
+        const metaByCat = {};
+        for(const p of this.data){
+          const k = p.category || 'Geral';
+          if(!metaByCat[k]) metaByCat[k] = { deals:0, coupons:0, logo:'' };
+          if(p.type === 'coupon') metaByCat[k].coupons += 1;
+          else metaByCat[k].deals += 1;
+          if(!metaByCat[k].logo && p.storeLogo) metaByCat[k].logo = p.storeLogo;
+        }
+
+        container.innerHTML = cats.map(cat => {
+          const active = this.filter.category === cat;
+          const meta = metaByCat[cat] || {deals:0, coupons:0, logo:''};
+
+          const count = (cat === 'Todos')
+            ? (this.tab === 'coupons' ? this.data.filter(x=>x.type==='coupon').length : this.data.filter(x=>x.type!=='coupon').length)
+            : (this.tab === 'coupons' ? meta.coupons : meta.deals);
+
+          const label = this.tab === 'coupons' ? `${count} cupons` : `${count} ofertas`;
+
+          const logo = (cat === 'Todos')
+            ? `<div class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center">
+                <i data-lucide="layers" class="w-5 h-5 text-slate-600"></i>
+               </div>`
+            : `<div class="w-10 h-10 rounded-xl bg-white border border-slate-200/70 flex items-center justify-center overflow-hidden">
+                ${meta.logo ? `<img src="${meta.logo}" class="w-8 h-8 object-contain" onerror="this.style.display='none'">`
+                           : `<i data-lucide="store" class="w-5 h-5 text-slate-600"></i>`}
+               </div>`;
+
+          return `
+            <button onclick="app.setCategory('${cat.replace(/'/g, "\\'")}')"
+              class="shrink-0 min-w-[220px] sm:min-w-[240px] text-left bg-white rounded-2xl border
+                     ${active ? 'border-brand-700 ring-2 ring-brand-700/10' : 'border-slate-200/70 hover:border-slate-300'}
+                     shadow-soft px-4 py-3 flex items-center gap-3 active:scale-[0.99]">
+              ${logo}
+              <div class="flex-1">
+                <div class="font-extrabold text-slate-800 leading-tight">${cat}</div>
+                <div class="text-xs font-bold text-slate-500">${label}</div>
+              </div>
+              <i data-lucide="chevron-right" class="w-4 h-4 ${active ? 'text-brand-700' : 'text-slate-400'}"></i>
+            </button>
+          `;
+        }).join('');
+
+        lucide.createIcons();
+      },
+
+      renderSkeleton(){
+        const container = document.getElementById('loading-skeleton');
+        container.innerHTML = Array(8).fill(0).map(() => `
+          <div class="bg-white rounded-2xl border border-slate-200/70 shadow-soft overflow-hidden">
+            <div class="h-44 bg-slate-100 animate-pulse"></div>
+            <div class="p-4 space-y-3">
+              <div class="h-3 w-20 bg-slate-100 rounded animate-pulse"></div>
+              <div class="h-4 w-full bg-slate-100 rounded animate-pulse"></div>
+              <div class="h-4 w-3/4 bg-slate-100 rounded animate-pulse"></div>
+              <div class="h-8 w-2/3 bg-slate-100 rounded animate-pulse mt-2"></div>
+            </div>
+          </div>
+        `).join('');
+      },
+
+      renderCouponsSkeleton(){
+        const container = document.getElementById('coupons-skeleton');
+        container.innerHTML = Array(6).fill(0).map(() => `
+          <div class="bg-white rounded-2xl border border-slate-200/70 shadow-soft p-4">
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 bg-slate-100 rounded-xl animate-pulse"></div>
+              <div class="flex-1 space-y-2">
+                <div class="h-4 w-3/4 bg-slate-100 rounded animate-pulse"></div>
+                <div class="h-3 w-1/2 bg-slate-100 rounded animate-pulse"></div>
+              </div>
+              <div class="h-10 w-24 bg-slate-100 rounded-xl animate-pulse"></div>
+            </div>
+            <div class="mt-4 h-12 bg-slate-100 rounded-xl animate-pulse"></div>
+          </div>
+        `).join('');
+      },
+
+      applyFilters(){
+        const q = this.filter.search;
+
+        let base = this.data.filter(p => this.tab === 'coupons' ? (p.type === 'coupon') : (p.type !== 'coupon'));
+
+        let result = base.filter(p => {
+          const matchSearch = !q
+            || (p.title || '').toLowerCase().includes(q)
+            || (p.category || '').toLowerCase().includes(q)
+            || (p.coupon || '').toLowerCase().includes(q)
+            || (p.description || '').toLowerCase().includes(q);
+
+          const matchCat = (this.filter.category === 'Todos') || (p.category === this.filter.category);
+
+          const matchFav = this.filter.showOnlyFavorites
+            ? this.favorites.includes(String(p.id))
+            : true;
+
+          return matchSearch && matchCat && matchFav;
+        });
+
+        this.renderCategories();
+
+        document.getElementById('loading-skeleton').classList.add('hidden');
+        document.getElementById('coupons-skeleton').classList.add('hidden');
+
+        if(this.tab === 'coupons'){
+          this.renderCoupons(result);
+        } else {
+          this.renderDeals(result);
+        }
+      },
+
+      renderDeals(products){
+        const container = document.getElementById('products-container');
+        const empty = document.getElementById('empty-state');
+
+        container.classList.toggle('hidden', !products.length);
+
+        if(!products.length){
+          empty.classList.remove('hidden');
+          return;
+        }
+        empty.classList.add('hidden');
+
+        container.innerHTML = products.map(p => {
+          const isFav = this.favorites.includes(String(p.id));
+          const off = Number(p.percentOff || 0);
+          const showOff = Number.isFinite(off) && off < 0;
+          const time = p.timeAgo || '';
+          const oldOk = p.oldPrice && p.oldPrice > p.price;
+
+          const storeLogo = p.storeLogo
+            ? `<img src="${p.storeLogo}" class="w-8 h-8 object-contain" onerror="this.style.display='none'">`
+            : `<i data-lucide="store" class="w-5 h-5 text-slate-600"></i>`;
+
+          return `
+            <article class="deal-card bg-white rounded-2xl border border-slate-200/70 shadow-soft overflow-hidden relative">
+              ${showOff ? `<div class="badge-off">${off}%</div>` : ''}
+
+              <a href="${p.link}" target="_blank" rel="noopener noreferrer" class="block bg-white">
+                <div class="aspect-[4/3] flex items-center justify-center bg-white">
+                  <img src="${p.image}" loading="lazy"
+                    class="w-full h-full object-contain p-3"
+                    onerror="this.src='https://placehold.co/640x480/f1f5f9/94a3b8?text=Sem+imagem'">
+                </div>
+              </a>
+
+              <div class="store-bubble" title="${p.category}">
+                ${storeLogo}
+              </div>
+
+              <div class="p-4">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-xs font-bold text-slate-400">${time}</span>
+
+                  <button onclick="app.toggleFavorite('${p.id}')" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 active:scale-95 flex items-center justify-center">
+                    <i data-lucide="heart" class="w-4 h-4 ${isFav ? 'text-rose-600' : 'text-slate-500'}"></i>
+                  </button>
+                </div>
+
+                <h3 class="font-extrabold text-slate-800 leading-snug clamp-2 min-h-[44px]">
+                  ${p.title}
+                </h3>
+
+                ${p.coupon ? `
+                  <div class="mt-2 inline-flex items-center gap-2 text-xs font-extrabold text-slate-600">
+                    <i data-lucide="ticket" class="w-4 h-4"></i>
+                    ${p.coupon}
+                  </div>
+                ` : `<div class="mt-2 h-[20px]"></div>`}
+
+                <div class="mt-3">
+                  ${oldOk ? `<div class="text-sm text-slate-400 line-through">${this.formatCurrency(p.oldPrice)}</div>` : `<div class="text-sm text-slate-300">&nbsp;</div>`}
+                  <div class="flex items-end justify-between gap-3">
+                    <div class="text-xl font-extrabold text-brand-700 leading-none">
+                      ${this.formatCurrency(p.price)} <span class="text-sm font-extrabold text-brand-700/80">${p.installment ? p.installment : ''}</span>
+                    </div>
+
+                    <a href="${p.link}" target="_blank" rel="noopener noreferrer"
+                      class="w-9 h-9 rounded-xl bg-blue-50 hover:bg-blue-100 active:scale-95 flex items-center justify-center border border-blue-100">
+                      <i data-lucide="external-link" class="w-4 h-4 text-brand-700"></i>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </article>
+          `;
+        }).join('');
+
+        lucide.createIcons();
+      },
+
+      async copyCoupon(code){
+        if(!code) return;
+        try{
+          await navigator.clipboard.writeText(code);
+          this.showToast("Cupom copiado");
+        }catch{
+          this.showToast("Não foi possível copiar");
+        }
+      },
+
+      renderCoupons(coupons){
+        const container = document.getElementById('coupons-container');
+        const empty = document.getElementById('empty-state');
+
+        if(!coupons.length){
+          container.classList.add('hidden');
+          empty.classList.remove('hidden');
+          return;
+        }
+        empty.classList.add('hidden');
+        container.classList.remove('hidden');
+
+        container.innerHTML = coupons.map(c => {
+          const isFav = this.favorites.includes(String(c.id));
+          const logo = c.storeLogo
+            ? `<img src="${c.storeLogo}" class="w-10 h-10 object-contain" onerror="this.style.display='none'">`
+            : `<div class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center">
+                 <i data-lucide="store" class="w-5 h-5 text-slate-600"></i>
+               </div>`;
+
+          return `
+            <article class="bg-white rounded-2xl border border-slate-200/70 shadow-soft p-4">
+              <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-xl bg-white border border-slate-200/70 flex items-center justify-center overflow-hidden">
+                  ${logo}
+                </div>
+                <div class="flex-1">
+                  <div class="font-extrabold text-slate-800 leading-tight">${c.category || 'Loja'}</div>
+                  <div class="text-xs font-bold text-slate-500">${c.expires ? c.expires : 'Tempo limitado'}</div>
+                </div>
+
+                <button onclick="app.toggleFavorite('${c.id}')"
+                  class="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 active:scale-95 flex items-center justify-center">
+                  <i data-lucide="heart" class="w-4 h-4 ${isFav ? 'text-rose-600' : 'text-slate-500'}"></i>
+                </button>
+              </div>
+
+              <h3 class="mt-3 font-extrabold text-slate-800 text-base">${c.title}</h3>
+              ${c.description ? `<p class="mt-1 text-sm text-slate-500 leading-relaxed">${c.description}</p>` : ''}
+
+              <div class="mt-4 bg-slate-50 border border-slate-200/70 rounded-2xl p-3 flex items-center justify-between gap-3">
+                <div class="flex flex-col">
+                  <span class="text-[11px] font-extrabold uppercase tracking-wider text-slate-500">Código</span>
+                  <span class="font-extrabold text-slate-900 text-lg tracking-tight">${c.coupon || '—'}</span>
+                </div>
+
+                <div class="flex items-center gap-2">
+                  <button onclick="app.copyCoupon('${String(c.coupon||'').replace(/'/g, "\\'")}')"
+                    class="px-4 h-11 rounded-xl bg-brand-700 hover:bg-brand-600 text-white font-extrabold text-xs uppercase tracking-wider active:scale-95 flex items-center gap-2">
+                    <i data-lucide="copy" class="w-4 h-4"></i>
+                    Copiar
+                  </button>
+
+                  <a href="${c.link || '#'}" target="_blank" rel="noopener noreferrer"
+                    class="w-11 h-11 rounded-xl bg-white border border-slate-200/70 hover:bg-slate-50 active:scale-95 flex items-center justify-center">
+                    <i data-lucide="external-link" class="w-4 h-4 text-slate-700"></i>
+                  </a>
+                </div>
+              </div>
+            </article>
+          `;
+        }).join('');
+
+        lucide.createIcons();
+      },
+
+      showToast(msg){
+        const toast = document.getElementById('toast');
+        document.getElementById('toast-msg').innerText = msg;
+        toast.classList.add('show');
+        setTimeout(()=>toast.classList.remove('show'), 2800);
+      },
+
+      setupPWA(){
+        const manifest = {
+          name: "Garimpo VIP",
+          short_name: "Garimpo",
+          start_url: ".",
+          display: "standalone",
+          background_color: "#eef1f5",
+          theme_color: "#1e40af",
+          icons: [{ src: "https://cdn-icons-png.flaticon.com/512/3081/3081559.png", sizes:"512x512", type:"image/png" }]
+        };
+        const blob = new Blob([JSON.stringify(manifest)], { type:'application/json' });
+        document.getElementById('manifest-placeholder').setAttribute('href', URL.createObjectURL(blob));
+      },
+
+      checkInstallable(){
+        window.addEventListener('beforeinstallprompt', (e) => {
+          e.preventDefault();
+          this.deferredPrompt = e;
+          const btn = document.getElementById('installAppBtn');
+          btn.style.display = 'inline-flex';
+          btn.onclick = async () => {
+            try { await this.deferredPrompt.prompt(); } catch {}
+            this.deferredPrompt = null;
+          };
+        });
+      }
+    };
+
+    function timeAgoFrom_(dt){
+      const diff = Date.now() - dt.getTime();
+      const min = Math.floor(diff / 60000);
+      if (min < 1) return "agora";
+      if (min < 60) return `há ${min} min`;
+      const h = Math.floor(min / 60);
+      if (h < 24) return `há ${h}h`;
+      const d = Math.floor(h / 24);
+      return `há ${d}d`;
+    }
+
+    window.shareLink = async () => {
+      const shareData = { title:'Garimpo.vip', text:'Promoções e cupons.', url: window.location.href };
+      if(navigator.share){ try{ await navigator.share(shareData); } catch{} }
+      else { navigator.clipboard.writeText(window.location.href); app.showToast("Link copiado"); }
+    };
+
+    document.addEventListener('DOMContentLoaded', () => app.init());
+  </script>
+</body>
+</html>

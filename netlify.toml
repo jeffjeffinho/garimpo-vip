@@ -1,0 +1,14 @@
+[build]
+  publish = "site"
+  functions = "site/netlify/functions"
+
+[[redirects]]
+  from = "/api/feed"
+  to = "/.netlify/functions/feed"
+  status = 200
+
+[[redirects]]
+  from = "/api/admin/*"
+  to = "/.netlify/functions/admin?path=:splat"
+  status = 200
+  force = true

@@ -1,0 +1,633 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Painel | Garimpo.vip</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+  <style>
+    body { font-family: "Plus Jakarta Sans", system-ui, sans-serif; }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800">
+  <header class="sticky top-0 z-40 bg-gradient-to-r from-blue-900 to-blue-700 text-white border-b border-white/10">
+    <div class="max-w-7xl mx-auto px-4 h-16 flex items-center gap-3">
+      <div class="font-extrabold tracking-tight">Garimpo.vip — Painel</div>
+
+      <nav class="ml-4 flex gap-2">
+        <button class="tab px-3 h-9 rounded-xl bg-white/10 border border-white/15 font-extrabold text-xs uppercase tracking-wider" data-tab="produtos">Produtos</button>
+        <button class="tab px-3 h-9 rounded-xl bg-white/5 border border-white/10 font-extrabold text-xs uppercase tracking-wider text-white/80" data-tab="encaminhar">Encaminhar</button>
+        <button class="tab px-3 h-9 rounded-xl bg-white/5 border border-white/10 font-extrabold text-xs uppercase tracking-wider text-white/80" data-tab="site">Site</button>
+        <button class="tab px-3 h-9 rounded-xl bg-white/5 border border-white/10 font-extrabold text-xs uppercase tracking-wider text-white/80" data-tab="regras">Regras</button>
+      </nav>
+
+      <div class="ml-auto flex items-center gap-2">
+        <div id="userBox" class="text-xs font-bold text-white/80"></div>
+        <button id="btnLogin" class="px-4 h-9 rounded-xl bg-white text-blue-900 font-extrabold text-xs uppercase tracking-wider">Entrar</button>
+        <button id="btnLogout" class="px-4 h-9 rounded-xl bg-white/10 border border-white/15 font-extrabold text-xs uppercase tracking-wider hidden">Sair</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto p-4 space-y-4">
+    <div id="authWarning" class="hidden bg-white border rounded-2xl p-6">
+      <div class="font-extrabold text-lg">Você precisa entrar para usar o painel.</div>
+      <p class="text-sm text-slate-600 mt-1">Clique em “Entrar”.</p>
+    </div>
+
+    <!-- PRODUTOS -->
+    <section id="view-produtos" class="hidden">
+      <div class="bg-white border rounded-2xl shadow-sm p-4">
+        <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+          <div class="flex-1">
+            <div class="font-extrabold text-lg">Produtos</div>
+            <div class="text-sm text-slate-500">Adicionar, editar, desativar e organizar sua base.</div>
+          </div>
+          <div class="flex gap-2">
+            <button id="btnRecompute" class="px-4 h-11 rounded-xl bg-slate-100 hover:bg-slate-200 font-extrabold text-xs uppercase tracking-wider">Recalcular quedas</button>
+            <button id="btnNew" class="px-4 h-11 rounded-xl bg-blue-800 hover:bg-blue-700 text-white font-extrabold text-xs uppercase tracking-wider">Novo produto</button>
+          </div>
+        </div>
+
+        <div class="mt-4 flex gap-2">
+          <input id="q" class="w-full h-11 rounded-xl border px-4 font-semibold" placeholder="Buscar por nome, loja, categoria..."/>
+          <button id="btnReload" class="px-4 h-11 rounded-xl bg-slate-100 hover:bg-slate-200 font-extrabold text-xs uppercase tracking-wider">Atualizar</button>
+        </div>
+
+        <div class="mt-4 overflow-auto rounded-xl border">
+          <table class="min-w-[980px] w-full text-sm">
+            <thead class="bg-slate-50 sticky top-0">
+              <tr class="text-left">
+                <th class="p-3 font-extrabold">Ativo</th>
+                <th class="p-3 font-extrabold">Tipo</th>
+                <th class="p-3 font-extrabold">Nome</th>
+                <th class="p-3 font-extrabold">Loja</th>
+                <th class="p-3 font-extrabold">Preço</th>
+                <th class="p-3 font-extrabold">Queda</th>
+                <th class="p-3 font-extrabold">Site</th>
+                <th class="p-3 font-extrabold">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="tbody" class="divide-y"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ENCAMINHAR -->
+    <section id="view-encaminhar" class="hidden">
+      <div class="bg-white border rounded-2xl shadow-sm p-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="font-extrabold text-lg">Encaminhar</div>
+            <div class="text-sm text-slate-500">Duas filas: quedas reais e envios diários.</div>
+          </div>
+          <button id="btnReloadDispatch" class="px-4 h-11 rounded-xl bg-slate-100 hover:bg-slate-200 font-extrabold text-xs uppercase tracking-wider">Atualizar</button>
+        </div>
+
+        <div class="mt-4 flex gap-2">
+          <button id="sub-drops" class="px-4 h-10 rounded-xl bg-blue-800 text-white font-extrabold text-xs uppercase tracking-wider">Baixou preço</button>
+          <button id="sub-daily" class="px-4 h-10 rounded-xl bg-slate-100 font-extrabold text-xs uppercase tracking-wider">Envios diários</button>
+        </div>
+
+        <div id="dispatchList" class="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4"></div>
+      </div>
+    </section>
+
+    <!-- SITE -->
+    <section id="view-site" class="hidden">
+      <div class="bg-white border rounded-2xl shadow-sm p-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="font-extrabold text-lg">Site</div>
+            <div class="text-sm text-slate-500">Escolha o que aparece e em qual seção.</div>
+          </div>
+          <button id="btnReloadSite" class="px-4 h-11 rounded-xl bg-slate-100 hover:bg-slate-200 font-extrabold text-xs uppercase tracking-wider">Atualizar</button>
+        </div>
+
+        <div class="mt-4 overflow-auto rounded-xl border">
+          <table class="min-w-[980px] w-full text-sm">
+            <thead class="bg-slate-50 sticky top-0">
+              <tr class="text-left">
+                <th class="p-3 font-extrabold">Exibir</th>
+                <th class="p-3 font-extrabold">Seção</th>
+                <th class="p-3 font-extrabold">Nome</th>
+                <th class="p-3 font-extrabold">Loja</th>
+                <th class="p-3 font-extrabold">Ação</th>
+              </tr>
+            </thead>
+            <tbody id="tbodySite" class="divide-y"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- REGRAS -->
+    <section id="view-regras" class="hidden">
+      <div class="bg-white border rounded-2xl shadow-sm p-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="font-extrabold text-lg">Regras</div>
+            <div class="text-sm text-slate-500">Campos claros e explícitos (sem “min_drop_abs” confuso).</div>
+          </div>
+          <button id="btnSaveRules" class="px-4 h-11 rounded-xl bg-blue-800 hover:bg-blue-700 text-white font-extrabold text-xs uppercase tracking-wider">Salvar</button>
+        </div>
+
+        <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="bg-slate-50 border rounded-2xl p-4">
+            <div class="font-extrabold">Queda mínima (R$)</div>
+            <div class="text-sm text-slate-600 mt-1">Ex.: 20 → só entra em “Baixou preço” se cair pelo menos R$20.</div>
+            <input id="r_abs" class="mt-3 w-full h-11 rounded-xl border px-4 font-semibold" />
+          </div>
+
+          <div class="bg-slate-50 border rounded-2xl p-4">
+            <div class="font-extrabold">Queda mínima (%)</div>
+            <div class="text-sm text-slate-600 mt-1">Ex.: 10 → só entra se cair pelo menos 10%.</div>
+            <input id="r_pct" class="mt-3 w-full h-11 rounded-xl border px-4 font-semibold" />
+          </div>
+
+          <div class="bg-slate-50 border rounded-2xl p-4">
+            <div class="font-extrabold">Qtd. envios diários</div>
+            <div class="text-sm text-slate-600 mt-1">Quantos produtos aparecem na fila “Envios diários”.</div>
+            <input id="r_daily" class="mt-3 w-full h-11 rounded-xl border px-4 font-semibold" />
+          </div>
+
+          <div class="bg-slate-50 border rounded-2xl p-4">
+            <div class="font-extrabold">Limite de itens no site</div>
+            <div class="text-sm text-slate-600 mt-1">Quantos produtos o feed entrega no máximo.</div>
+            <input id="r_site" class="mt-3 w-full h-11 rounded-xl border px-4 font-semibold" />
+          </div>
+
+          <div class="bg-slate-50 border rounded-2xl p-4 md:col-span-2">
+            <div class="font-extrabold">Template WhatsApp</div>
+            <div class="text-sm text-slate-600 mt-1">
+              Variáveis: <code>{NOME}</code> <code>{PRECO_ANT}</code> <code>{PRECO_ATUAL}</code> <code>{DROP_PCT}</code> <code>{CUPOM}</code> <code>{LINK}</code>
+            </div>
+            <textarea id="r_tpl" class="mt-3 w-full min-h-[140px] rounded-xl border p-3 font-semibold"></textarea>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- MODAL -->
+  <div id="modal" class="fixed inset-0 bg-black/40 hidden items-center justify-center p-3 z-50">
+    <div class="w-full max-w-3xl bg-white rounded-2xl border shadow-xl overflow-hidden">
+      <div class="p-4 border-b flex items-center justify-between">
+        <div class="font-extrabold text-lg" id="modalTitle">Novo produto</div>
+        <button id="btnClose" class="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 font-extrabold">×</button>
+      </div>
+
+      <!-- AQUI resolve o “estourar a tela” -->
+      <div class="p-4 max-h-[85vh] overflow-y-auto space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <label class="text-sm font-extrabold">Ativo
+            <select id="f_ativo" class="mt-1 w-full h-11 rounded-xl border px-3 font-semibold">
+              <option value="true">Sim</option>
+              <option value="false">Não</option>
+            </select>
+          </label>
+
+          <label class="text-sm font-extrabold">Tipo
+            <select id="f_tipo" class="mt-1 w-full h-11 rounded-xl border px-3 font-semibold">
+              <option value="deal">Promoção</option>
+              <option value="coupon">Cupom</option>
+            </select>
+          </label>
+
+          <label class="text-sm font-extrabold md:col-span-2">Nome
+            <input id="f_nome" class="mt-1 w-full h-11 rounded-xl border px-4 font-semibold"/>
+          </label>
+
+          <label class="text-sm font-extrabold">Loja
+            <input id="f_loja" class="mt-1 w-full h-11 rounded-xl border px-4 font-semibold"/>
+          </label>
+
+          <label class="text-sm font-extrabold">Categoria
+            <input id="f_categoria" class="mt-1 w-full h-11 rounded-xl border px-4 font-semibold"/>
+          </label>
+
+          <label class="text-sm font-extrabold md:col-span-2">Imagem URL
+            <input id="f_imagem" class="mt-1 w-full h-11 rounded-xl border px-4 font-semibold"/>
+          </label>
+
+          <label class="text-sm font-extrabold md:col-span-2">URL Afiliado (link que será usado)
+            <input id="f_afiliado" class="mt-1 w-full h-11 rounded-xl border px-4 font-semibold"/>
+          </label>
+
+          <label class="text-sm font-extrabold md:col-span-2">URL Original (opcional)
+            <input id="f_original" class="mt-1 w-full h-11 rounded-xl border px-4 font-semibold"/>
+          </label>
+
+          <label class="text-sm font-extrabold">Preço atual
+            <input id="f_preco" class="mt-1 w-full h-11 rounded-xl border px-4 font-semibold" inputmode="decimal"/>
+          </label>
+
+          <label class="text-sm font-extrabold">Preço anterior
+            <input id="f_preco_ant" class="mt-1 w-full h-11 rounded-xl border px-4 font-semibold" inputmode="decimal"/>
+          </label>
+
+          <label class="text-sm font-extrabold">Cupom (se houver)
+            <input id="f_cupom" class="mt-1 w-full h-11 rounded-xl border px-4 font-semibold"/>
+          </label>
+
+          <label class="text-sm font-extrabold">Parcela (opcional)
+            <input id="f_parcela" class="mt-1 w-full h-11 rounded-xl border px-4 font-semibold" placeholder="ex: ou 10x de R$ 99,90"/>
+          </label>
+
+          <label class="text-sm font-extrabold md:col-span-2">Mensagem WhatsApp (se vazio, o sistema gera pelo template)
+            <textarea id="f_msg" class="mt-1 w-full min-h-[120px] rounded-xl border p-3 font-semibold"></textarea>
+          </label>
+
+          <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-3">
+            <label class="text-sm font-extrabold">Exibir no site
+              <select id="f_site" class="mt-1 w-full h-11 rounded-xl border px-3 font-semibold">
+                <option value="true">Sim</option>
+                <option value="false">Não</option>
+              </select>
+            </label>
+            <label class="text-sm font-extrabold">Seção do site
+              <select id="f_secao" class="mt-1 w-full h-11 rounded-xl border px-3 font-semibold">
+                <option value="promocoes">Promoções</option>
+                <option value="cupons">Cupons</option>
+                <option value="descontos">Descontos</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2">
+          <button id="btnCancel" class="px-4 h-11 rounded-xl bg-slate-100 hover:bg-slate-200 font-extrabold text-xs uppercase tracking-wider">Cancelar</button>
+          <button id="btnSave" class="px-5 h-11 rounded-xl bg-blue-800 hover:bg-blue-700 text-white font-extrabold text-xs uppercase tracking-wider">Salvar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ------- AUTH / API -------
+    function requireUser(){
+      const u = netlifyIdentity.currentUser();
+      return u;
+    }
+    async function getToken(){
+      const u = requireUser();
+      if(!u) throw new Error("Not logged");
+      return await u.jwt();
+    }
+    async function api(path, opts={}){
+      const token = await getToken();
+      const method = opts.method || "GET";
+      const headers = { "content-type":"application/json; charset=utf-8", "authorization": "Bearer " + token };
+      const res = await fetch("/api/admin/" + path, { method, headers, body: opts.body ? JSON.stringify(opts.body) : undefined });
+      const data = await res.json().catch(()=>({ok:false,error:"Resposta inválida"}));
+      if(!data.ok) throw new Error(data.error || "Erro");
+      return data;
+    }
+
+    // ------- STATE -------
+    let PRODUCTS = [];
+    let RULES = {};
+    let currentTab = "produtos";
+    let currentDispatch = "drops";
+    let editingId = null;
+
+    // ------- UI -------
+    const tabs = document.querySelectorAll(".tab");
+    tabs.forEach(b => b.addEventListener("click", () => setTab(b.dataset.tab)));
+
+    function setTab(t){
+      currentTab = t;
+      tabs.forEach(b=>{
+        const on = b.dataset.tab === t;
+        b.className = on
+          ? "tab px-3 h-9 rounded-xl bg-white/10 border border-white/15 font-extrabold text-xs uppercase tracking-wider"
+          : "tab px-3 h-9 rounded-xl bg-white/5 border border-white/10 font-extrabold text-xs uppercase tracking-wider text-white/80";
+      });
+
+      ["produtos","encaminhar","site","regras"].forEach(k=>{
+        document.getElementById("view-"+k).classList.toggle("hidden", k!==t);
+      });
+
+      if(t==="encaminhar") loadDispatch();
+      if(t==="site") renderSite();
+      if(t==="regras") renderRules();
+    }
+
+    // ------- LOGIN -------
+    const btnLogin = document.getElementById("btnLogin");
+    const btnLogout = document.getElementById("btnLogout");
+    const userBox = document.getElementById("userBox");
+    const authWarning = document.getElementById("authWarning");
+
+    btnLogin.onclick = () => netlifyIdentity.open("login");
+    btnLogout.onclick = () => netlifyIdentity.logout();
+
+    netlifyIdentity.on("init", user => refreshAuth(user));
+    netlifyIdentity.on("login", user => { netlifyIdentity.close(); refreshAuth(user); });
+    netlifyIdentity.on("logout", () => refreshAuth(null));
+    netlifyIdentity.init();
+
+    function refreshAuth(user){
+      const logged = !!user;
+      btnLogin.classList.toggle("hidden", logged);
+      btnLogout.classList.toggle("hidden", !logged);
+      userBox.textContent = logged ? user.email : "";
+      authWarning.classList.toggle("hidden", logged);
+
+      if(logged){
+        boot();
+      }
+    }
+
+    // ------- DATA LOAD -------
+    async function boot(){
+      await loadAll();
+      setTab(currentTab);
+    }
+
+    async function loadAll(){
+      const [p, r] = await Promise.all([
+        api("products"),
+        api("rules")
+      ]);
+      PRODUCTS = p.items || [];
+      RULES = r.rules || {};
+      renderProducts();
+      renderRules();
+      renderSite();
+    }
+
+    // ------- PRODUCTS TABLE -------
+    document.getElementById("btnReload").onclick = loadAll;
+    document.getElementById("btnRecompute").onclick = async () => {
+      await api("actions/recompute", { method:"POST", body:{} });
+      await loadAll();
+      alert("Regras recalculadas.");
+    };
+
+    document.getElementById("q").addEventListener("input", renderProducts);
+
+    function renderProducts(){
+      const q = (document.getElementById("q").value || "").toLowerCase();
+      const rows = PRODUCTS
+        .filter(p => !q || String(p.nome||"").toLowerCase().includes(q) || String(p.loja||"").toLowerCase().includes(q) || String(p.categoria||"").toLowerCase().includes(q))
+        .map(p => {
+          const ativo = p.ativo ? "✅" : "—";
+          const tipo = String(p.tipo||"deal")==="coupon" ? "Cupom" : "Promo";
+          const preco = p.preco_atual ? ("R$ " + Number(p.preco_atual).toFixed(2).replace(".",",")) : "—";
+          const queda = (p.drop_detectado ? `⬇ ${p.drop_abs||0} / ${p.drop_pct||0}%` : "—");
+          const site = p.site_exibir ? "✅" : "—";
+          return `
+            <tr>
+              <td class="p-3">${ativo}</td>
+              <td class="p-3 font-bold">${tipo}</td>
+              <td class="p-3 font-extrabold">${escapeHtml(p.nome||"")}</td>
+              <td class="p-3">${escapeHtml(p.loja||"")}</td>
+              <td class="p-3">${preco}</td>
+              <td class="p-3">${queda}</td>
+              <td class="p-3">${site}</td>
+              <td class="p-3">
+                <div class="flex gap-2">
+                  <button class="px-3 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 font-extrabold text-xs" onclick="openEdit('${p.id}')">Editar</button>
+                  <button class="px-3 h-9 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs" onclick="disableProduct('${p.id}')">Desativar</button>
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join("");
+
+      document.getElementById("tbody").innerHTML = rows || `<tr><td class="p-6 text-slate-500" colspan="8">Nada encontrado.</td></tr>`;
+    }
+
+    async function disableProduct(id){
+      if(!confirm("Desativar este produto?")) return;
+      await api("products/" + id, { method:"DELETE" });
+      await loadAll();
+    }
+
+    // ------- MODAL -------
+    const modal = document.getElementById("modal");
+    document.getElementById("btnClose").onclick = closeModal;
+    document.getElementById("btnCancel").onclick = closeModal;
+    document.getElementById("btnNew").onclick = () => openNew();
+    document.getElementById("btnSave").onclick = saveModal;
+
+    function openNew(){
+      editingId = null;
+      document.getElementById("modalTitle").textContent = "Novo produto";
+      fillForm({});
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+    }
+    function openEdit(id){
+      const p = PRODUCTS.find(x => String(x.id)===String(id));
+      if(!p) return;
+      editingId = id;
+      document.getElementById("modalTitle").textContent = "Editar produto";
+      fillForm(p);
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+    }
+    function closeModal(){
+      modal.classList.add("hidden");
+      modal.classList.remove("flex");
+    }
+
+    function fillForm(p){
+      setVal("f_ativo", String(!!p.ativo));
+      setVal("f_tipo", p.tipo || "deal");
+      setVal("f_nome", p.nome || "");
+      setVal("f_loja", p.loja || "");
+      setVal("f_categoria", p.categoria || "");
+      setVal("f_imagem", p.imagem_url || "");
+      setVal("f_afiliado", p.url_afiliado || "");
+      setVal("f_original", p.url_original || "");
+      setVal("f_preco", p.preco_atual || "");
+      setVal("f_preco_ant", p.preco_anterior || "");
+      setVal("f_cupom", p.cupom || "");
+      setVal("f_parcela", p.parcela || "");
+      setVal("f_msg", p.msg_whats || "");
+      setVal("f_site", String(!!p.site_exibir));
+      setVal("f_secao", p.site_secao || "promocoes");
+    }
+    function getVal(id){ return document.getElementById(id).value; }
+    function setVal(id,v){ document.getElementById(id).value = v; }
+
+    async function saveModal(){
+      const payload = {
+        ativo: getVal("f_ativo")==="true",
+        tipo: getVal("f_tipo"),
+        nome: getVal("f_nome"),
+        loja: getVal("f_loja"),
+        categoria: getVal("f_categoria"),
+        imagem_url: getVal("f_imagem"),
+        url_afiliado: getVal("f_afiliado"),
+        url_original: getVal("f_original"),
+        preco_atual: getVal("f_preco"),
+        preco_anterior: getVal("f_preco_ant"),
+        cupom: getVal("f_cupom"),
+        parcela: getVal("f_parcela"),
+        msg_whats: getVal("f_msg"),
+        site_exibir: getVal("f_site")==="true",
+        site_secao: getVal("f_secao"),
+      };
+
+      if(!payload.nome || !payload.url_afiliado){
+        alert("Nome e URL Afiliado são obrigatórios.");
+        return;
+      }
+
+      if(editingId){
+        await api("products/" + editingId, { method:"PUT", body: payload });
+      }else{
+        await api("products", { method:"POST", body: payload });
+      }
+
+      await loadAll();
+      closeModal();
+    }
+
+    // ------- DISPATCH -------
+    document.getElementById("btnReloadDispatch").onclick = loadDispatch;
+    document.getElementById("sub-drops").onclick = () => { currentDispatch="drops"; toggleDispatchButtons(); loadDispatch(); };
+    document.getElementById("sub-daily").onclick = () => { currentDispatch="daily"; toggleDispatchButtons(); loadDispatch(); };
+
+    function toggleDispatchButtons(){
+      document.getElementById("sub-drops").className = currentDispatch==="drops"
+        ? "px-4 h-10 rounded-xl bg-blue-800 text-white font-extrabold text-xs uppercase tracking-wider"
+        : "px-4 h-10 rounded-xl bg-slate-100 font-extrabold text-xs uppercase tracking-wider";
+      document.getElementById("sub-daily").className = currentDispatch==="daily"
+        ? "px-4 h-10 rounded-xl bg-blue-800 text-white font-extrabold text-xs uppercase tracking-wider"
+        : "px-4 h-10 rounded-xl bg-slate-100 font-extrabold text-xs uppercase tracking-wider";
+    }
+
+    async function loadDispatch(){
+      const limit = currentDispatch==="drops" ? 50 : (Number(RULES.envios_diarios_qtd||10));
+      const route = currentDispatch==="drops" ? "dispatch/drops?limit="+limit : "dispatch/daily?limit="+limit;
+      const res = await api(route);
+      renderDispatch(res.items || []);
+    }
+
+    function renderDispatch(items){
+      const box = document.getElementById("dispatchList");
+      if(!items.length){
+        box.innerHTML = `<div class="text-slate-500">Nada na fila.</div>`;
+        return;
+      }
+      box.innerHTML = items.map(p => `
+        <div class="bg-slate-50 border rounded-2xl p-4">
+          <div class="flex gap-3">
+            <img src="${p.imagem_url||""}" class="w-20 h-20 rounded-xl bg-white object-contain border"
+                 onerror="this.style.display='none'">
+            <div class="flex-1">
+              <div class="font-extrabold">${escapeHtml(p.nome||"")}</div>
+              <div class="text-sm text-slate-600">${escapeHtml(p.loja||"")}</div>
+              <div class="mt-2 text-sm font-bold">
+                Atual: <span class="text-blue-800">${fmt(p.preco_atual)}</span>
+                ${p.preco_anterior ? ` <span class="text-slate-400 line-through ml-2">${fmt(p.preco_anterior)}</span>` : ""}
+              </div>
+              ${p.drop_detectado ? `<div class="mt-1 text-xs font-extrabold text-rose-600">⬇ Queda: ${p.drop_abs||0} / ${p.drop_pct||0}%</div>` : ""}
+            </div>
+          </div>
+
+          <textarea class="mt-3 w-full min-h-[110px] rounded-xl border p-3 font-semibold bg-white" readonly>${p.msg_whats||""}</textarea>
+
+          <div class="mt-3 flex gap-2">
+            <button class="flex-1 px-4 h-11 rounded-xl bg-blue-800 hover:bg-blue-700 text-white font-extrabold text-xs uppercase tracking-wider"
+              onclick="copyMsg('${p.id}')">Copiar mensagem</button>
+
+            <button class="px-4 h-11 rounded-xl bg-slate-200 hover:bg-slate-300 font-extrabold text-xs uppercase tracking-wider"
+              onclick="markSent('${p.id}')">Marcar enviado</button>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    async function copyMsg(id){
+      const p = PRODUCTS.find(x=>String(x.id)===String(id)) || null;
+      const msg = p && p.msg_whats ? String(p.msg_whats) : "";
+      try{
+        await navigator.clipboard.writeText(msg);
+        alert("Mensagem copiada!");
+      }catch{
+        alert("Não foi possível copiar.");
+      }
+    }
+
+    async function markSent(id){
+      await api("actions/mark-sent", { method:"POST", body:{ id, kind: currentDispatch==="drops" ? "drop" : "daily" } });
+      await loadAll();
+      await loadDispatch();
+    }
+
+    // ------- SITE -------
+    document.getElementById("btnReloadSite").onclick = loadAll;
+
+    function renderSite(){
+      const rows = PRODUCTS.map(p => `
+        <tr>
+          <td class="p-3">
+            <input type="checkbox" ${p.site_exibir ? "checked" : ""} onchange="toggleSite('${p.id}', this.checked)" />
+          </td>
+          <td class="p-3">
+            <select class="h-10 rounded-xl border px-3 font-bold" onchange="setSecao('${p.id}', this.value)">
+              ${["promocoes","cupons","descontos"].map(s => `<option value="${s}" ${p.site_secao===s?"selected":""}>${s}</option>`).join("")}
+            </select>
+          </td>
+          <td class="p-3 font-extrabold">${escapeHtml(p.nome||"")}</td>
+          <td class="p-3">${escapeHtml(p.loja||"")}</td>
+          <td class="p-3">
+            <button class="px-3 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 font-extrabold text-xs" onclick="openEdit('${p.id}')">Editar</button>
+          </td>
+        </tr>
+      `).join("");
+
+      document.getElementById("tbodySite").innerHTML = rows || `<tr><td class="p-6 text-slate-500" colspan="5">Sem itens.</td></tr>`;
+    }
+
+    async function toggleSite(id, val){
+      await api("products/" + id, { method:"PUT", body:{ site_exibir: !!val } });
+      await loadAll();
+    }
+    async function setSecao(id, val){
+      await api("products/" + id, { method:"PUT", body:{ site_secao: val } });
+      await loadAll();
+    }
+
+    // ------- RULES -------
+    function renderRules(){
+      document.getElementById("r_abs").value = RULES.queda_minima_reais || "20";
+      document.getElementById("r_pct").value = RULES.queda_minima_percent || "10";
+      document.getElementById("r_daily").value = RULES.envios_diarios_qtd || "10";
+      document.getElementById("r_site").value = RULES.site_limite_itens || "40";
+      document.getElementById("r_tpl").value = RULES.whats_template || "{NOME}\n{LINK}";
+    }
+
+    document.getElementById("btnSaveRules").onclick = async () => {
+      const rules = {
+        queda_minima_reais: document.getElementById("r_abs").value,
+        queda_minima_percent: document.getElementById("r_pct").value,
+        envios_diarios_qtd: document.getElementById("r_daily").value,
+        site_limite_itens: document.getElementById("r_site").value,
+        whats_template: document.getElementById("r_tpl").value,
+      };
+      await api("rules", { method:"PUT", body:{ rules } });
+      await loadAll();
+      alert("Regras salvas!");
+    }
+
+    // ------- helpers -------
+    function escapeHtml(s){
+      return String(s||"").replace(/[&<>"']/g, m => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[m]));
+    }
+    function fmt(v){
+      const n = Number(String(v||"").replace(",","."));
+      if(!Number.isFinite(n) || n<=0) return "—";
+      return "R$ " + n.toFixed(2).replace(".",",");
+    }
+  </script>
+</body>
+</html>
