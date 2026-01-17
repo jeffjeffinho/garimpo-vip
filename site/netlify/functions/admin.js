@@ -1,29 +1,20 @@
 exports.handler = async function (event, context) {
-  // Identity -> Functions: user chega em context.clientContext.user quando Authorization: Bearer <jwt> é válido
-  // (ver Netlify blog sobre Identity + Functions)
-  const user = context?.clientContext?.user;
+  // 1. Pega o PIN enviado pelo frontend (headers vêm em minúsculo)
+  const incomingPin = event.headers["x-admin-pin"];
+  
+  // 2. Pega o PIN correto configurado no Netlify
+  const correctPin = process.env.ADMIN_PIN;
 
-  if (!user) {
+  // 3. Validação simples
+  if (!correctPin || incomingPin !== correctPin) {
     return {
       statusCode: 401,
       headers: { "content-type": "application/json; charset=utf-8" },
-      body: JSON.stringify({ ok:false, error: "Unauthorized" }),
+      body: JSON.stringify({ ok: false, error: "PIN incorreto ou não configurado" }),
     };
   }
 
-  // opcional: restringir por e-mail
-  const allowList = (process.env.ADMIN_EMAILS || "")
-    .split(",")
-    .map(s => s.trim().toLowerCase())
-    .filter(Boolean);
-
-  if (allowList.length && !allowList.includes(String(user.email || "").toLowerCase())) {
-    return {
-      statusCode: 403,
-      headers: { "content-type": "application/json; charset=utf-8" },
-      body: JSON.stringify({ ok:false, error: "Forbidden" }),
-    };
-  }
+  // --- O RESTO CONTINUA IGUAL (Conecta com o Google Apps Script) ---
 
   const base = process.env.GAS_WEBAPP_URL;
   const token = process.env.GAS_ADMIN_TOKEN;
@@ -32,7 +23,7 @@ exports.handler = async function (event, context) {
     return {
       statusCode: 500,
       headers: { "content-type": "application/json; charset=utf-8" },
-      body: JSON.stringify({ ok:false, error: "Missing GAS_WEBAPP_URL or GAS_ADMIN_TOKEN" }),
+      body: JSON.stringify({ ok:false, error: "Faltam variáveis de ambiente (GAS_WEBAPP_URL/TOKEN)" }),
     };
   }
 
@@ -46,7 +37,7 @@ exports.handler = async function (event, context) {
   }
 
   const payload = {
-    token,
+    token, // Token mestre do GAS
     method: event.httpMethod,
     path,
     query: qs,
