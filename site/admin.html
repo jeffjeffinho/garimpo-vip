@@ -239,12 +239,17 @@
         // Sucesso
         localStorage.setItem("garimpo_pin", CURRENT_PIN);
         showApp();
-      }).catch(err => {
-        alert("PIN Incorreto!");
-        CURRENT_PIN = "";
-        localStorage.removeItem("garimpo_pin");
-      });
-    }
+      .catch(err => {
+  console.error("Erro detalhado:", err);
+  // Agora vai mostrar se o erro é "Unauthorized" (PIN) ou outra coisa vinda do Google
+  alert("Erro no Login: " + (err.message || "Desconhecido"));
+  
+  // Só limpa o PIN se o erro for realmente de autorização (401)
+  if(String(err.message).includes("Unauthorized") || String(err.message).includes("PIN")){
+     CURRENT_PIN = "";
+     localStorage.removeItem("garimpo_pin");
+  }
+});
 
     function showApp(){
       document.getElementById("pinScreen").classList.add("hidden");
