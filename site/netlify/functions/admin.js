@@ -1,20 +1,38 @@
 exports.handler = async function (event, context) {
-  // 1. Pega o PIN enviado pelo frontend (headers vêm em minúsculo)
-  const incomingPin = event.headers["x-admin-pin"];
+  // --- 1. DEBUG E SEGURANÇA ---
   
-  // 2. Pega o PIN correto configurado no Netlify
-  const correctPin = process.env.ADMIN_PIN;
+  // Normaliza os headers para garantir que pegamos mesmo se vier maiúsculo/minúsculo
+  const headers = event.headers || {};
+  const incomingPin = headers["x-admin-pin"] || headers["X-Admin-Pin"] || "";
+  
+  // Pega o PIN configurado no ambiente
+  const correctPin = process.env.ADMIN_PIN || "";
 
-  // 3. Validação simples
-  if (!correctPin || incomingPin !== correctPin) {
+  // Logs para ajudar a debugar (aparecem na aba "Functions" > "Logs" do Netlify)
+  console.log("--- TENTATIVA DE LOGIN ---");
+  console.log("PIN Recebido (Header):", incomingPin ? incomingPin : "(Vazio)");
+  // Não mostramos o PIN correto no log por segurança, apenas o tamanho dele ou se existe
+  console.log("PIN Configurado (Env):", correctPin ? `Definido (tamanho: ${correctPin.length})` : "NÃO DEFINIDO");
+
+  // Comparação blindada (remove espaços extras e garante que são strings)
+  if (
+    !correctPin || 
+    String(incomingPin).trim() !== String(correctPin).trim()
+  ) {
+    console.log("ERRO: PIN incorreto ou variável de ambiente ausente.");
     return {
       statusCode: 401,
       headers: { "content-type": "application/json; charset=utf-8" },
-      body: JSON.stringify({ ok: false, error: "PIN incorreto ou não configurado" }),
+      body: JSON.stringify({ 
+        ok: false, 
+        error: "Acesso negado. Verifique os logs da função no Netlify." 
+      }),
     };
   }
+  
+  console.log("SUCESSO: PIN aceito.");
 
-  // --- O RESTO CONTINUA IGUAL (Conecta com o Google Apps Script) ---
+  // --- 2. LÓGICA DO PROXY (Google Apps Script) ---
 
   const base = process.env.GAS_WEBAPP_URL;
   const token = process.env.GAS_ADMIN_TOKEN;
@@ -23,7 +41,7 @@ exports.handler = async function (event, context) {
     return {
       statusCode: 500,
       headers: { "content-type": "application/json; charset=utf-8" },
-      body: JSON.stringify({ ok:false, error: "Faltam variáveis de ambiente (GAS_WEBAPP_URL/TOKEN)" }),
+      body: JSON.stringify({ ok:false, error: "Erro interno: Variáveis GAS não configuradas" }),
     };
   }
 
@@ -37,7 +55,7 @@ exports.handler = async function (event, context) {
   }
 
   const payload = {
-    token, // Token mestre do GAS
+    token,
     method: event.httpMethod,
     path,
     query: qs,
@@ -58,6 +76,7 @@ exports.handler = async function (event, context) {
       body: text,
     };
   } catch (e) {
+    console.log("ERRO FETCH:", e);
     return {
       statusCode: 500,
       headers: { "content-type": "application/json; charset=utf-8" },
